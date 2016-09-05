@@ -1,0 +1,56 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "{{user `source_path`}}",
+      "headless": true,
+      "boot_wait": "2m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "2h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    }
+  ],
+    "provisioners": [
+    {
+	"type": "file",
+	"source": "sql-server-install-files",
+	"destination": "install-files"
+    },	
+    {
+      "type": "shell",
+      "remote_path": "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+          "./scripts/netfx3.bat",
+          "./scripts/ssms.bat",
+        "./scripts/compact.bat"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "output": "ssms_windows_10_{{.Provider}}.box",
+      "vagrantfile_template": "vagrantfile-windows_10.template"
+    }
+  ],
+    "variables": {
+	"source_path": "./build/windows-10/windows-10.ovf"
+    }
+}

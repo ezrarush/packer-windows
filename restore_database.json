@@ -1,0 +1,54 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "{{user `source_path`}}",
+      "boot_wait": "2m",
+      "headless": true,
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "6h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+	"type": "file",
+	"source": "database-files",
+	"destination": "database-files"
+    },
+    {
+      "type": "shell",
+      "remote_path": "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+	  "./scripts/restore-database.bat"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "output": "database_server_core_{{.Provider}}.box",
+      "vagrantfile_template": "vagrantfile-windows_2012_r2.template"
+    }
+  ],    
+  "variables": {
+    "source_path": "./build/sql-server-core/sql-server-core.ovf"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+	"source_path": "{{user `source_path`}}",
+	"output_directory": "build/sql-server-core",
+	"vm_name": "sql-server-core",
+      "boot_wait": "2m",
+      "headless": true,
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "6h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+	"type": "file",
+	"source": "sql-server-install-files",
+	"destination": "install-files"
+    },
+    {
+      "type": "shell",
+      "remote_path": "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+          "./scripts/netfx3.bat",
+          "./scripts/sql-server.bat",
+	  "./scripts/config-firewall.bat",
+	  "./scripts/allow-powershell-scripts.bat"
+      ]
+    },
+      {
+      "type": "powershell",
+      "scripts": [
+	  "./scripts/enable-sql-server-tcp.ps1"	  
+      ]
+    }
+  ],
+  "variables": {
+    "source_path": "./build/server-core/server-core.ovf"
+  }
+}
